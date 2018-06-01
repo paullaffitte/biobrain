@@ -20,40 +20,22 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 
-{-# LANGUAGE OverloadedStrings #-}
+module Biobrain.Activation
+    ( Activation
+    , sigmoid
+    )
+    where
 
-module Main where
+type ActivationFn = Float -> Float
 
-import Test.Tasty
-import Test.Tasty.Hspec
--- import Text.Printf
+data Activation = Activation
+    { fn    :: ActivationFn
+    , fn'   :: ActivationFn
+    }
 
-import Biobrain.Brain
-import Biobrain.Activation
-
-spec_aze :: Spec
-spec_aze = do
-    network <- runIO $ trainNew sigmoid 0.1 [] []
-    network >>= \n -> it "" 0 `shouldBe` 0
-
-main :: IO ()
-main = do
-    defaultMain (testGroup "Biobrain" [brain_trainNew])
-
-
--- withResource' :: IO a -> (a -> TestTree)
--- withResource' initFn testTree = withResource initFn (\_ -> return ()) $ testCase assertion
-
--- brain_trainNew :: TestTree
--- brain_trainNew = withResource' (trainNew sigmoid 0.1 [] []) $ testCase "brain_trainNew" assertion
---     where
-
---         assertion = (assertEqual "Should train a new neural network with five features as" 5 . length . layer)
-
--- sayYoTest :: TestTree
--- sayYoTest = testCase "Testing sayYo"
---     (assertEqual "Should say Yo to Friend!" "Yo Friend!" (sayYo "Friend"))
-
--- add5Test :: TestTree
--- add5Test = testCase "Testing add5"
---     (assertEqual "Should add 5 to get 10" 10 (add5 5))
+sigmoid :: Activation
+sigmoid = Activation fn fn'
+    where
+        fn  x = 1 / (1 + exp (-x))
+        fn' x = (fn x) * (1 - fn x) 
+ 

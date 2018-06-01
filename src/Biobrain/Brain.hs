@@ -20,40 +20,36 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 
-{-# LANGUAGE OverloadedStrings #-}
+module Biobrain.Brain
+    ( trainNew
+    , train
+    , train'
+    ) where
 
-module Main where
-
-import Test.Tasty
-import Test.Tasty.Hspec
--- import Text.Printf
-
-import Biobrain.Brain
 import Biobrain.Activation
 
-spec_aze :: Spec
-spec_aze = do
-    network <- runIO $ trainNew sigmoid 0.1 [] []
-    network >>= \n -> it "" 0 `shouldBe` 0
+data Neuron = Neuron
+    { biais     :: Float
+    , weights   :: [Float]
+    } deriving Show
 
-main :: IO ()
-main = do
-    defaultMain (testGroup "Biobrain" [brain_trainNew])
+type NeuralLayer = [Neuron]
 
+data NeuralNetwork = NeuralNetwork
+    { layer         :: NeuralLayer
+    , activation    :: Activation
+    , learningRate  :: Float
+    }
 
--- withResource' :: IO a -> (a -> TestTree)
--- withResource' initFn testTree = withResource initFn (\_ -> return ()) $ testCase assertion
+type Feature = Float
 
--- brain_trainNew :: TestTree
--- brain_trainNew = withResource' (trainNew sigmoid 0.1 [] []) $ testCase "brain_trainNew" assertion
---     where
+trainNew :: Activation -> Float -> [Feature] -> [String] -> IO NeuralNetwork
+trainNew a learningRate fs outNames = return $ NeuralNetwork [] a learningRate
 
---         assertion = (assertEqual "Should train a new neural network with five features as" 5 . length . layer)
+train :: NeuralLayer -> Integer -> NeuralLayer
+train layer n
+    | n > 0     = train (train' layer) (n - 1)
+    | otherwise = layer
 
--- sayYoTest :: TestTree
--- sayYoTest = testCase "Testing sayYo"
---     (assertEqual "Should say Yo to Friend!" "Yo Friend!" (sayYo "Friend"))
-
--- add5Test :: TestTree
--- add5Test = testCase "Testing add5"
---     (assertEqual "Should add 5 to get 10" 10 (add5 5))
+train' :: NeuralLayer -> NeuralLayer
+train' layer = layer
