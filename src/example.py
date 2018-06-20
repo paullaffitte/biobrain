@@ -1,5 +1,6 @@
 import random
 import matplotlib.pyplot as plt
+from termcolor import colored
 
 import biobrain
 import utils
@@ -15,10 +16,10 @@ def demo(brain):
         [-1, -1]
     ];
 
-    print('\nStatic examples -----')
+    print(colored('\nStatic examples -----', 'blue'))
     print('inputs: ' + str(inputs) + '\n' + 'predictions:' + str([brain.predict(i) for i in inputs]) + '\n')
 
-    print('Random examples -----')
+    print(colored('\nRandom examples -----', 'blue'))
     for i in range(10):
         l               = random.random() * 100 - 50
         r               = random.random() * 100 - 50
@@ -30,14 +31,14 @@ def demo(brain):
 
 
 def loadingExample(filename):
-    print('LOADING EXAMPLE -----')
+    print(colored('LOADING EXAMPLE -----', 'green'))
 
     brain = biobrain.NeuralNetwork()
     brain.load(filename)
     demo(brain)
 
 def learnigExample(filename):
-    print('LEARNING EXAMPLE -----')
+    print(colored('LEARNING EXAMPLE -----', 'green'))
 
     trainingList = [
         ([.1, .1],      [.5]),
