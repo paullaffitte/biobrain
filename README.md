@@ -49,4 +49,4 @@ When you trained your brain previously, you maybe noticed that the `train` funct
 
   utils.plotCosts(costs, 'moving avg 5', smoothFactor=5, chunkSize=10)
 ```
-
+![alt text](https://raw.githubusercontent.com/paullaffitte/biobrain/master/assets/visualisation.png)
