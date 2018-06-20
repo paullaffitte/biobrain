@@ -50,3 +50,9 @@ When you trained your brain previously, you maybe noticed that the `train` funct
   utils.plotCosts(costs, 'moving avg 5', smoothFactor=5, chunkSize=10)
 ```
 ![alt text](https://raw.githubusercontent.com/paullaffitte/biobrain/master/assets/visualisation.png)
+
+## Example project
+### Dependencies
+To run the example project, you need to have installed `matplotlib`, `termcolor`, `numpy` and `scipy`.
+### Run the example project
+To see a little bit of the capacities of the library, you can run the example project ny the following command `python3 src learn filename` to start a learning session, or `python3 src load filename` to load an already trained brain.
