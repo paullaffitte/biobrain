@@ -17,7 +17,7 @@ def demo(brain):
     ];
 
     print(colored('\nStatic examples -----', 'blue'))
-    print('inputs: ' + str(inputs) + '\n' + 'predictions:' + str([brain.predict(i) for i in inputs]) + '\n')
+    print('inputs: ' + str(inputs) + '\n' + 'evaluateions:' + str([brain.evaluate(i) for i in inputs]) + '\n')
 
     print(colored('\nRandom examples -----', 'blue'))
     for i in range(10):
@@ -25,9 +25,9 @@ def demo(brain):
         r               = random.random() * 100 - 50
         data            = [l, r]
         expected        = 0 if l < r else 1
-        prediction      = brain.predict(data)
+        evaluateion      = brain.evaluate(data)
 
-        print('expected: ' + str(expected) + ', got: ' + str('%0.2f' % prediction))
+        print('expected: ' + str(expected) + ', got: ' + str('%0.2f' % evaluateion))
 
 
 def loadingExample(filename):

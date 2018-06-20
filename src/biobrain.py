@@ -39,14 +39,14 @@ class NeuralNetwork:
 
         return costs
 
-    def predict(self, inputs):
+    def evaluate(self, inputs):
         return self._activate(self._accumulate(inputs))
 
     def getMeanCost(self, trainingList):
         cost = 0
         for trainingData in trainingList:
             targetInputs, targetOutputs = trainingData
-            cost += self._calcCost(self.predict(targetInputs), targetOutputs[0])
+            cost += self._calcCost(self.evaluate(targetInputs), targetOutputs[0])
         return cost / len(trainingList)
 
     def save(self, filename, meanPrecision=100):
@@ -70,13 +70,13 @@ class NeuralNetwork:
             targetInputs, _ = trainingData
 
             signal = self._accumulate(targetInputs)
-            prediction = self._activate(signal)
+            evaluation = self._activate(signal)
 
-            self._learn(trainingData, signal, prediction, learningRate)
+            self._learn(trainingData, signal, evaluation, learningRate)
 
-    def _learn(self, trainingData, signal, prediction, learningRate):
+    def _learn(self, trainingData, signal, evaluation, learningRate):
         targetInputs, targetOutputs = trainingData
-        costD_predD     = self._calcCostD(targetOutputs[0], prediction)
+        costD_predD     = self._calcCostD(targetOutputs[0], evaluation)
         predD_signalD   = self._activate(signal, True)
         costD_zD        = costD_predD * predD_signalD
 
@@ -93,11 +93,11 @@ class NeuralNetwork:
 
         self._neuron = calibrateNeuron(self._neuron)
 
-    def _calcCost(self, targetOutput, prediction):
-        return np.square(prediction - targetOutput)
+    def _calcCost(self, targetOutput, evaluation):
+        return np.square(evaluation - targetOutput)
 
-    def _calcCostD(self, targetOutput, prediction):
-        return 2 * (prediction - targetOutput)
+    def _calcCostD(self, targetOutput, evaluation):
+        return 2 * (evaluation - targetOutput)
 
     def _accumulate(self, data):
         weigths, biais = self._neuron
