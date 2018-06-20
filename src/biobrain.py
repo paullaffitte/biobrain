@@ -1,7 +1,16 @@
 import numpy as np
+import json
 
 import utils
 import activation
+
+class BiobrainException(BaseException):
+    """BiobrainException"""
+
+    def __init__(self, error):
+        super(BiobrainException, self).__init__()
+        self.error = error
+
 
 class NeuralNetwork:
     """NeuralNetwork"""
@@ -37,6 +46,22 @@ class NeuralNetwork:
             targetInputs, targetOutputs = trainingData
             cost += self._calcCost(self.predict(targetInputs), targetOutputs[0])
         return cost / len(trainingList)
+
+    def save(self, filename):
+        try:
+            with open(filename, 'w+') as file:
+                file.write(json.dumps([self._activation, self._neuron]))
+                print('Brain saved at \'' + filename + '\'')
+        except PermissionError:
+            raise BiobrainException('Oops.. Permission denied!')
+
+    def load(self, filename):
+        try:
+            with open(filename, 'r') as file:
+                self._activation, self._neuron = json.load(file)
+                print('Brain loaded from \'' + filename + '\'')
+        except FileNotFoundError:
+            raise BiobrainException('Oops.. File not found!')
 
     def _train(self, trainingList, learningRate):
         for trainingData in trainingList:
