@@ -1,5 +1,7 @@
 import numpy as np
 
+import utils
+
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -67,11 +69,13 @@ def train(data, activation, activationP, iterations, learningRate):
 def makePrediction(data, activation, w1, w2, b):
     return activation(accumulate(data, w1, w2, b))
 
+
+
 class NeuralNetwork:
+    """NeuralNetwork"""
 
     defaultActivation = 'sigmoid'
 
-    """NeuralNetwork"""
     def __init__(self, activation=defaultActivation):
         self._activation = activation
         self._neuron = ([np.random.randn(), np.random.randn()], (np.random.randn()))
@@ -79,43 +83,21 @@ class NeuralNetwork:
             'sigmoid': (sigmoid, sigmoidD)
         };
 
-    def train(self, trainingList, learningRate=0.1):
-        for trainingData in trainingList:
-            targetInputs, _ = trainingData
+    def train(self, trainingList, learningRate=0.1, chunkSize=0, maxIterations=0):
+        if chunkSize > 0:
+            trainingList = utils.chunk(trainingList, chunkSize)
 
-            signal = self._accumulate(targetInputs)
-            prediction = self._activate(signal)
+        costs = []
+        i = 0
 
-            self.learn(trainingData, signal, prediction, learningRate)
+        for subTrainingList in trainingList:
+            self._train(subTrainingList, learningRate)
+            costs.append(self.getMeanCost(subTrainingList))
+            i += 1
+            if maxIterations > 0 and i == maxIterations:
+                break;
 
-    def learn(self, trainingData, signal, prediction, learningRate):
-
-# def teach(point, pred, target, signal, learningRate, activationP, w1, w2, b):
-        targetInputs, targetOutputs = trainingData
-
-        w, b = self._neuron
-        w1, w2, b = teach(targetInputs, self.predict(targetInputs), targetOutputs[0], self._accumulate(targetInputs), learningRate, sigmoidD, w[0], w[1], b)
-        self._neuron = ([w1, w2], b)
-
-        # def calibrate(value, zD_valueD):
-        #     costD_valueD = costD_zD * zD_valueD
-        #     return value - learningRate * costD_valueD
-
-        # def calibrateNeuron(neuron):
-        #     weigths, biais = neuron
-        #     zD_weigthD = []
-        #     for weigth in weigths:
-        #         zD_weigthD.append(calibrate(weigth, weigth))
-        #     return (zD_weigthD, calibrate(biais, 1))
-
-        # # targetInputs, targetOutputs = trainingData
-
-        # costD_predD     = self._calcCostD(targetOutputs[0], prediction)
-        # predD_signalD   = self._activate(signal, True)
-
-        # costD_zD        = costD_predD * predD_signalD
-
-        # self._neuron = calibrateNeuron(self._neuron)
+        return costs
 
     def predict(self, inputs):
         return self._activate(self._accumulate(inputs))
@@ -126,6 +108,41 @@ class NeuralNetwork:
             targetInputs, targetOutputs = trainingData
             cost += self._calcCost(self.predict(targetInputs), targetOutputs[0])
         return cost / len(trainingList)
+
+    def _train(self, trainingList, learningRate):
+        for trainingData in trainingList:
+            targetInputs, _ = trainingData
+
+            signal = self._accumulate(targetInputs)
+            prediction = self._activate(signal)
+
+            self._learn(trainingData, signal, prediction, learningRate)
+
+    def _learn(self, trainingData, signal, prediction, learningRate):
+        def calibrate(value, zD_valueD):
+            costD_valueD = costD_zD * zD_valueD
+            return value - learningRate * costD_valueD
+
+        def calibrateNeuron(neuron):
+            weigths, biais = neuron
+            zD_weigthD = []
+            for weigth in weigths:
+                zD_weigthD.append(calibrate(weigth, weigth))
+            return (zD_weigthD, calibrate(biais, 1))
+
+        targetInputs, targetOutputs = trainingData
+
+        w, b = self._neuron
+        w1, w2, b = teach(targetInputs, self.predict(targetInputs), targetOutputs[0], self._accumulate(targetInputs), learningRate, sigmoidD, w[0], w[1], b)
+        self._neuron = ([w1, w2], b)
+
+
+        # costD_predD     = self._calcCostD(targetOutputs[0], prediction)
+        # predD_signalD   = self._activate(signal, True)
+
+        # costD_zD        = costD_predD * predD_signalD
+
+        # self._neuron = calibrateNeuron(self._neuron)
 
     def _calcCost(self, targetOutput, prediction):
         return np.square(prediction - targetOutput)
@@ -144,4 +161,3 @@ class NeuralNetwork:
             return derivative(signal)
 
         return function(signal)
-

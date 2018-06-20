@@ -1,33 +1,8 @@
 import random
 import matplotlib.pyplot as plt
-from matplotlib.legend_handler import HandlerLine2D
-import numpy as np
-from scipy.interpolate import spline
 
 import biobrain
-
-def chunk(xs, n):
-    return zip(*[iter(xs)]*n)
-
-def reducedAverage(xs, n):
-    return list(map(lambda c: sum(c) / float(len(c)), chunk(xs, n)))
-
-def plotCosts(costs, label='', points=300, smoothFactor=1):
-    costsNb     = len(costs)
-    limitRatio  = costsNb / (points / smoothFactor)
-
-    if (limitRatio > 1):
-        costs = reducedAverage(costs, int(limitRatio))
-
-    x           = np.linspace(0, costsNb, len(costs))
-    xNew        = np.linspace(x.min(), x.max(), points)
-    costsSmooth = spline(x, costs, xNew)
-
-    line = plt.plot(xNew, costsSmooth, label=label)
-    # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.legend()
-    plt.ylabel('costs')
-    plt.xlabel('learning iterations')
+import utils
 
 def example1():
     trainingList = [
@@ -50,8 +25,8 @@ def example1():
 
     costs, w1, w2, b = biobrain.train(trainingList, biobrain.sigmoid, biobrain.sigmoidD, 10000, 0.1)
 
-    plotCosts(costs, 'old')
-    plotCosts(costs, 'old10', smoothFactor=10)
+    utils.plotCosts(costs, 'old')
+    utils.plotCosts(costs, 'old10', smoothFactor=10)
 
     # ------------------------------------------
 
@@ -67,14 +42,19 @@ def example1():
     random.shuffle(trainingList)
 
     nn      = biobrain.NeuralNetwork('sigmoid')
-    costs   = []
+    costs   = nn.train(trainingList, chunkSize=100, maxIterations=300)
+    # costs   = []
 
-    for subTrainingList in chunk(trainingList, 100):
-        nn.train(subTrainingList)
-        costs.append(nn.getMeanCost(subTrainingList))
+    # i = 0
+    # for subTrainingList in utils.chunk(trainingList, 1):
+    #     nn.train(subTrainingList)
+    #     costs.append(nn.getMeanCost(subTrainingList))
+    #     i += 1
+    #     if i == 300:
+    #         break;
 
-    plotCosts(costs, 'new')
-    plotCosts(costs, 'new10', smoothFactor=10)
+    utils.plotCosts(costs, 'new')
+    utils.plotCosts(costs, 'new10', smoothFactor=10)
 
     # -------------------------------------------
 
