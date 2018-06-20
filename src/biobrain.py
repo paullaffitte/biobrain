@@ -10,9 +10,12 @@ class NeuralNetwork:
 
     def __init__(self, activation=defaultActivation):
         self._activation = activation
-        self._neuron = ([np.random.randn(), np.random.randn()], (np.random.randn()))
 
     def train(self, trainingList, learningRate=0.1, chunkSize=0, maxIterations=0):
+        if len(trainingList):
+            inputs, outputs = trainingList[0]
+            self._setNeurons(len(inputs), len(outputs))
+
         if chunkSize > 0:
             trainingList = utils.chunk(trainingList, chunkSize)
 
@@ -29,26 +32,30 @@ class NeuralNetwork:
         return costs
 
     def predict(self, inputs):
-        return self._activate(self._accumulate(inputs))
+        return [self._compute(n, inputs)[1] for n in self._neurons]
 
     def getMeanCost(self, trainingList):
         cost = 0
         for trainingData in trainingList:
             targetInputs, targetOutputs = trainingData
-            cost += self._calcCost(self.predict(targetInputs), targetOutputs[0])
+            cost += sum([self._calcCost(p, tOut) for p in self.predict(targetInputs) for tOut in targetOutputs]) / len(targetOutputs)
         return cost / len(trainingList)
+
+    def _setNeurons(self, inputs, outputs):
+        self._neurons = [self._addNeuron(inputs) for _ in range(outputs)]
+
+    def _addNeuron(self, inputs):
+        return ([np.random.randn() for _ in range(inputs)], np.random.randn())
 
     def _train(self, trainingList, learningRate):
         for trainingData in trainingList:
             targetInputs, _ = trainingData
+            self._neurons = [self._learn(n, trainingData, self._compute(n, targetInputs), learningRate) for n in self._neurons]
 
-            signal = self._accumulate(targetInputs)
-            prediction = self._activate(signal)
-
-            self._learn(trainingData, signal, prediction, learningRate)
-
-    def _learn(self, trainingData, signal, prediction, learningRate):
+    def _learn(self, neuron, trainingData, computation, learningRate):
         targetInputs, targetOutputs = trainingData
+        signal, prediction          = computation
+
         costD_predD     = self._calcCostD(targetOutputs[0], prediction)
         predD_signalD   = self._activate(signal, True)
         costD_zD        = costD_predD * predD_signalD
@@ -57,14 +64,14 @@ class NeuralNetwork:
             costD_valueD = costD_zD * zD_valueD
             return value - learningRate * costD_valueD
 
-        def calibrateNeuron(neuron):
-            weigths, biais  = self._neuron
+        def calibrateNeuron():
+            weigths, biais  = neuron
             newWeights      = [calibrate(w, p) for w, p in zip(weigths, targetInputs)]
             biais           = calibrate(biais, 1)
 
             return newWeights, biais
 
-        self._neuron = calibrateNeuron(self._neuron)
+        return calibrateNeuron()
 
     def _calcCost(self, targetOutput, prediction):
         return np.square(prediction - targetOutput)
@@ -72,9 +79,9 @@ class NeuralNetwork:
     def _calcCostD(self, targetOutput, prediction):
         return 2 * (prediction - targetOutput)
 
-    def _accumulate(self, data):
-        weigths, biais = self._neuron
-        return sum([w * d for w, d in zip(weigths, data)]) + biais
+    def _accumulate(self, neuron, inputs):
+        weigths, biais = neuron
+        return sum([w * d for w, d in zip(weigths, inputs)]) + biais
 
     def _activate(self, signal, derivate=False):
         function, derivative = activation.functions.get(self._activation, self.defaultActivation)
@@ -83,3 +90,8 @@ class NeuralNetwork:
             return derivative(signal)
 
         return function(signal)
+
+    def _compute(self, neuron, inputs):
+        signal = self._accumulate(neuron, inputs)
+        prediction = self._activate(signal)
+        return signal, prediction
