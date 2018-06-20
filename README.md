@@ -1,4 +1,4 @@
-# biobrain
+# Biobrain
 
 The first goal of this library was to be as easy as possible to use, thus the documentation consists of this only readme. The main feature is a machine learning algorithm based on a neural network. 
 
