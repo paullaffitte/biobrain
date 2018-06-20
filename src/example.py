@@ -34,6 +34,6 @@ def example1():
 
     print('Last mean cost: ' + str(costs.pop()))
 
-    utils.plotCosts(costs, 'new')
-    utils.plotCosts(costs, 'new10', smoothFactor=10)
+    utils.plotCosts(costs, chunkSize=10)
+    utils.plotCosts(costs, 'moving avg 5', smoothFactor=5, chunkSize=10)
     plt.show()

@@ -66,16 +66,6 @@ class NeuralNetwork:
 
         self._neuron = calibrateNeuron(self._neuron)
 
-    def teach(self, point, costD_zD, learningRate, activationP, weigths, b):
-        def calibrate(value, zD_valueD):
-            costD_valueD = costD_zD * zD_valueD
-            return value - learningRate * costD_valueD
-
-        newWeights  = [calibrate(w, p) for w, p in zip(weigths, point)]
-        biais       = calibrate(b, 1)
-
-        return newWeights, b
-
     def _calcCost(self, targetOutput, prediction):
         return np.square(prediction - targetOutput)
 
