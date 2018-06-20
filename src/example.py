@@ -15,8 +15,10 @@ def demo(brain):
         [-1, -1]
     ];
 
-    print('\ninputs: ' + str(inputs) + '\n' + 'predictions:' + str([brain.predict(i) for i in inputs]) + '\n')
+    print('\nStatic examples -----')
+    print('inputs: ' + str(inputs) + '\n' + 'predictions:' + str([brain.predict(i) for i in inputs]) + '\n')
 
+    print('Random examples -----')
     for i in range(10):
         l               = random.random() * 100 - 50
         r               = random.random() * 100 - 50
@@ -52,9 +54,8 @@ def learnigExample(filename):
     costs   = brain.train(trainingList, chunkSize=10, maxIterations=500)
 
     brain.save(filename)
-    # demo(brain)
 
-    print('Last mean cost: ' + str(costs.pop()))
+    print('Last estimated mean cost: ' + str(costs.pop()))
     utils.plotCosts(costs, chunkSize=10)
     utils.plotCosts(costs, 'moving avg 5', smoothFactor=5, chunkSize=10)
     plt.show()

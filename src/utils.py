@@ -9,7 +9,7 @@ def chunk(xs, chunkSize):
 def reducedAverage(xs, n):
     return list(map(lambda c: sum(c) / float(len(c)), chunk(xs, n)))
 
-def plotCosts(costs, label='mean costs over time', points=300, smoothFactor=1, chunkSize=-1):
+def plotCosts(costs, label='estimated mean costs over time', points=300, smoothFactor=1, chunkSize=-1):
     costsNb     = len(costs)
     limitRatio  = costsNb / (points / smoothFactor)
 

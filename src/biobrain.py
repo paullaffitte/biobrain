@@ -22,6 +22,8 @@ class NeuralNetwork:
         self._neuron = ([np.random.randn(), np.random.randn()], (np.random.randn()))
 
     def train(self, trainingList, learningRate=0.1, chunkSize=0, maxIterations=0):
+        self.trainingList = trainingList
+
         if chunkSize > 0:
             trainingList = utils.chunk(trainingList, chunkSize)
 
@@ -47,10 +49,10 @@ class NeuralNetwork:
             cost += self._calcCost(self.predict(targetInputs), targetOutputs[0])
         return cost / len(trainingList)
 
-    def save(self, filename):
+    def save(self, filename, meanPrecision=100):
         try:
             with open(filename, 'w+') as file:
-                file.write(json.dumps([self._activation, self._neuron]))
+                file.write(json.dumps([self._activation, self._neuron, self.getMeanCost(self.trainingList[:meanPrecision])]))
                 print('Brain saved at \'' + filename + '\'')
         except PermissionError:
             raise BiobrainException('Oops.. Permission denied!')
@@ -58,8 +60,8 @@ class NeuralNetwork:
     def load(self, filename):
         try:
             with open(filename, 'r') as file:
-                self._activation, self._neuron = json.load(file)
-                print('Brain loaded from \'' + filename + '\'')
+                self._activation, self._neuron, meanCost = json.load(file)
+                print('Brain loaded from \'' + filename + '\'\nEstimated mean cost: ' + str(meanCost))
         except FileNotFoundError:
             raise BiobrainException('Oops.. File not found!')
 
