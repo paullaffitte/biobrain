@@ -33,10 +33,8 @@ class NeuralNetwork:
         if chunkSize > 0:
             trainingList = utils.chunk(trainingList, chunkSize)
 
-
         costs = []
         i = 0
-
         for subTrainingList in trainingList:
             self._train(subTrainingList, learningRate)
             costs.append(self.getMeanCost(subTrainingList))
@@ -50,11 +48,11 @@ class NeuralNetwork:
         return [self._compute(n, inputs) for n in self._neurons]
 
     def getMeanCost(self, trainingList):
-        cost = 0
+        costs = []
         for trainingData in trainingList:
             targetInputs, targetOutputs = trainingData
-            cost += self._calcCost(self.evaluate(targetInputs), targetOutputs)
-        return cost / len(trainingList)
+            costs += self._calcCosts(self.evaluate(targetInputs), targetOutputs)
+        return sum(costs) / len(costs)
 
     def save(self, filename, meanPrecision=100):
         try:
@@ -96,14 +94,14 @@ class NeuralNetwork:
 
 
     def _setNeurons(self, inputs, outputs):
-        self._neurons = [self._newNeuron(inputs) ]
+        self._neurons = [self._newNeuron(inputs) for _ in range(outputs)]
 
     def _newNeuron(self, inputs):
         return ([np.random.randn() for _ in range(inputs)], np.random.randn())
 
-    def _calcCost(self, targetOutputs, evaluations):
+    def _calcCosts(self, targetOutputs, evaluations):
         targetEval = zip(targetOutputs, evaluations)
-        return sum([np.square(evaluation - targetOutput) for (targetOutput, evaluation) in targetEval]) / len(targetOutputs)
+        return [np.square(e - t) for (t, e) in targetEval]
 
     def _calcCostD(self, targetOutput, evaluation):
         return 2 * (evaluation - targetOutput)
