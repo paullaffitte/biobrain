@@ -19,13 +19,20 @@ class NeuralNetwork:
 
     def __init__(self, activation=defaultActivation):
         self._activation = activation
-        self._neuron = ([np.random.randn(), np.random.randn()], (np.random.randn()))
+        self._neurons = []
 
     def train(self, trainingList, learningRate=0.1, chunkSize=0, maxIterations=0):
         self.trainingList = trainingList
 
+        if len(trainingList) == 0:
+            raise BiobrainException('Empty training list')
+
+        inputs, outputs = trainingList[0]
+        self._setNeurons(len(inputs), len(outputs))
+
         if chunkSize > 0:
             trainingList = utils.chunk(trainingList, chunkSize)
+
 
         costs = []
         i = 0
@@ -40,19 +47,19 @@ class NeuralNetwork:
         return costs
 
     def evaluate(self, inputs):
-        return self._activate(self._accumulate(inputs))
+        return [self._compute(n, inputs) for n in self._neurons]
 
     def getMeanCost(self, trainingList):
         cost = 0
         for trainingData in trainingList:
             targetInputs, targetOutputs = trainingData
-            cost += self._calcCost(self.evaluate(targetInputs), targetOutputs[0])
+            cost += self._calcCost(self.evaluate(targetInputs), targetOutputs)
         return cost / len(trainingList)
 
     def save(self, filename, meanPrecision=100):
         try:
             with open(filename, 'w+') as file:
-                file.write(json.dumps([self._activation, self._neuron, self.getMeanCost(self.trainingList[:meanPrecision])]))
+                file.write(json.dumps([self._activation, self._neurons, self.getMeanCost(self.trainingList[:meanPrecision])]))
                 print('Brain saved at \'' + filename + '\'')
         except PermissionError:
             raise BiobrainException('Oops.. Permission denied!')
@@ -65,45 +72,46 @@ class NeuralNetwork:
         except FileNotFoundError:
             raise BiobrainException('Oops.. File not found!')
 
+
     def _train(self, trainingList, learningRate):
         for trainingData in trainingList:
-            targetInputs, _ = trainingData
+            targetInputs, targetOutputs = trainingData
+            self._neurons = [self._learn(n, targetInputs, tOut, learningRate) for (n, tOut) in zip(self._neurons, targetOutputs)]
 
-            signal = self._accumulate(targetInputs)
-            evaluation = self._activate(signal)
+    def _learn(self, neuron, targetInputs, targetOutput, learningRate):
+        evaluation      = self._compute(neuron, targetInputs)
+        evalD_signalD   = self._compute(neuron, targetInputs, True)
+        costD_evalD     = self._calcCostD(targetOutput, evaluation)
+        costD_signalD   = costD_evalD * evalD_signalD
 
-            self._learn(trainingData, signal, evaluation, learningRate)
-
-    def _learn(self, trainingData, signal, evaluation, learningRate):
-        targetInputs, targetOutputs = trainingData
-        costD_predD     = self._calcCostD(targetOutputs[0], evaluation)
-        predD_signalD   = self._activate(signal, True)
-        costD_zD        = costD_predD * predD_signalD
-
-        def calibrate(value, zD_valueD):
-            costD_valueD = costD_zD * zD_valueD
+        def calibrate(value, signalD_valueD):
+            costD_valueD = costD_signalD * signalD_valueD
             return value - learningRate * costD_valueD
 
-        def calibrateNeuron(neuron):
-            weigths, biais  = self._neuron
-            newWeights      = [calibrate(w, p) for w, p in zip(weigths, targetInputs)]
-            biais           = calibrate(biais, 1)
+        weigths, biais  = neuron
+        newWeights      = [calibrate(w, p) for w, p in zip(weigths, targetInputs)]
+        biais           = calibrate(biais, 1)
 
-            return newWeights, biais
+        return newWeights, biais
 
-        self._neuron = calibrateNeuron(self._neuron)
 
-    def _calcCost(self, targetOutput, evaluation):
-        return np.square(evaluation - targetOutput)
+    def _setNeurons(self, inputs, outputs):
+        self._neurons = [self._newNeuron(inputs) ]
+
+    def _newNeuron(self, inputs):
+        return ([np.random.randn() for _ in range(inputs)], np.random.randn())
+
+    def _calcCost(self, targetOutputs, evaluations):
+        targetEval = zip(targetOutputs, evaluations)
+        return sum([np.square(evaluation - targetOutput) for (targetOutput, evaluation) in targetEval]) / len(targetOutputs)
 
     def _calcCostD(self, targetOutput, evaluation):
         return 2 * (evaluation - targetOutput)
 
-    def _accumulate(self, data):
-        weigths, biais = self._neuron
-        return sum([w * d for w, d in zip(weigths, data)]) + biais
+    def _compute(self, neuron, data, derivate=False):
+        weigths, biais  = neuron
+        signal          = sum([w * d for w, d in zip(weigths, data)]) + biais
 
-    def _activate(self, signal, derivate=False):
         function, derivative = activation.functions.get(self._activation, self.defaultActivation)
 
         if (derivate):

@@ -25,7 +25,7 @@ def demo(brain):
         r               = random.random() * 100 - 50
         data            = [l, r]
         expected        = 0 if l < r else 1
-        evaluateion      = brain.evaluate(data)
+        evaluation      = brain.evaluate(data)
 
         print('expected: ' + str(expected) + ', got: ' + str('%0.2f' % evaluateion))
 
