@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerLine2D
 import numpy as np
-from scipy.interpolate import spline
+from scipy.interpolate import CubicSpline
 
 def chunk(xs, chunkSize):
     return zip(*[iter(xs)]*chunkSize)
@@ -18,7 +18,7 @@ def plotCosts(costs, label='estimated mean costs over time', points=300, smoothF
 
     x           = np.linspace(0, costsNb, len(costs))
     xNew        = np.linspace(x.min(), x.max(), points)
-    costsSmooth = spline(x, costs, xNew)
+    costsSmooth = CubicSpline(x, costs)(xNew)
 
     line = plt.plot(xNew, costsSmooth, label=label)
     plt.legend()
